@@ -7,3 +7,5 @@ let init_message = settings.init_message;
 
 for (let profile of profiles)
     new AgentProcess().start(profile, load_memory, init_message);
+
+// Chat with an intelligent assistant in your terminal

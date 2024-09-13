@@ -93,15 +93,12 @@ export class Prompter {
     }
 
     async initExamples() {
-        // Using Promise.all to implement concurrent processing
-        // Create Examples instances
+        console.log('Loading examples...')
         this.convo_examples = new Examples(this.embedding_model);
+        await this.convo_examples.load(this.profile.conversation_examples);
         this.coding_examples = new Examples(this.embedding_model);
-        // Use Promise.all to load examples concurrently
-        await Promise.all([
-            this.convo_examples.load(this.profile.conversation_examples),
-            this.coding_examples.load(this.profile.coding_examples),
-        ]);
+        await this.coding_examples.load(this.profile.coding_examples);
+        console.log('Examples loaded.');
     }
 
     async replaceStrings(prompt, messages, examples=null, prev_memory=null, to_summarize=[], last_goals=null) {
@@ -127,10 +124,6 @@ export class Prompter {
             prompt = prompt.replaceAll('$TO_SUMMARIZE', stringifyTurns(to_summarize));
         if (prompt.includes('$CONVO'))
             prompt = prompt.replaceAll('$CONVO', 'Recent conversation:\n' + stringifyTurns(messages));
-        if (prompt.includes('$SELF_PROMPT')) {
-            let self_prompt = this.agent.self_prompter.on ? `Use this self-prompt to guide your behavior: "${this.agent.self_prompter.prompt}"\n` : '';
-            prompt = prompt.replaceAll('$SELF_PROMPT', self_prompt);
-        }
         if (prompt.includes('$LAST_GOALS')) {
             let goal_text = '';
             for (let goal in last_goals) {

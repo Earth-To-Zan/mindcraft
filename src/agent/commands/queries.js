@@ -44,8 +44,6 @@ export const queryList = [
             if (other_players.length > 0) {
                 res += '\n- Other Players: ' + other_players.join(', ');
             }
-
-            res += '\n' + agent.bot.modes.getMiniDocs() + '\n';
             return pad(res);
         }
     },
@@ -64,7 +62,7 @@ export const queryList = [
                 res += ': none';
             }
             else if (agent.bot.game.gameMode === 'creative') {
-                res += '\n(You have infinite items in creative mode. You do not need to gather resources!!)';
+                res += '\n(You have infinite items in creative mode)';
             }
             return pad(res);
         }
@@ -124,9 +122,9 @@ export const queryList = [
     },
     {
         name: "!modes",
-        description: "Get all available modes and their docs and see which are on/off.",
+        description: "Get all available modes and see which are on/off.",
         perform: function (agent) {
-            return agent.bot.modes.getDocs();
+            return agent.bot.modes.getStr();
         }
     },
     {

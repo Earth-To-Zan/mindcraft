@@ -16,6 +16,7 @@ const commandRegex = /!(\w+)(?:\(((?:[^)(]+|'[^']*'|"[^"]*")*)\))?/
 const argRegex = /(?:"[^"]*"|'[^']*'|[^,])+/g;
 
 export function containsCommand(message) {
+    console.log("MESSAGE: " + message)
     const commandMatch = message.match(commandRegex);
     if (commandMatch)
         return "!" + commandMatch[1];
@@ -66,10 +67,6 @@ export function truncCommandMessage(message) {
         return message.substring(0, commandMatch.index + commandMatch[0].length);
     }
     return message;
-}
-
-export function isAction(name) {
-    return actionsList.find(action => action.name === name) !== undefined;
 }
 
 function numParams(command) {

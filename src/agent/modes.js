@@ -1,12 +1,7 @@
 import * as skills from './library/skills.js';
 import * as world from './library/world.js';
 import * as mc from '../utils/mcdata.js';
-import settings from '../../settings.js'
 
-function say(agent, message) {
-    if (agent.shut_up || !settings.narrate_behavior) return;
-    agent.bot.chat(message);
-}
 
 // a mode is a function that is called every tick to respond immediately to the world
 // it has the following fields:
@@ -46,13 +41,13 @@ const modes = [
             }
             else if (block.name === 'lava' || block.name === 'flowing_lava' || block.name === 'fire' ||
                 blockAbove.name === 'lava' || blockAbove.name === 'flowing_lava' || blockAbove.name === 'fire') {
-                say(agent, 'I\'m on fire!'); // TODO: gets stuck in lava
+                bot.chat('I\'m on fire!'); // TODO: gets stuck in lava
                 execute(this, agent, async () => {
                     let nearestWater = world.getNearestBlock(bot, 'water', 20);
                     if (nearestWater) {
                         const pos = nearestWater.position;
                         await skills.goToPosition(bot, pos.x, pos.y, pos.z, 0.2);
-                        say(agent, 'Ahhhh that\'s better!');
+                        bot.chat('Ahhhh that\'s better!');
                     }
                     else {
                         await skills.moveAway(bot, 5);
@@ -60,7 +55,7 @@ const modes = [
                 });
             }
             else if (Date.now() - bot.lastDamageTime < 3000 && (bot.health < 5 || bot.lastDamageTaken >= bot.health)) {
-                say(agent, 'I\'m dying!');
+                bot.chat('I\'m dying!');
                 execute(this, agent, async () => {
                     await skills.moveAway(bot, 20);
                 });
@@ -79,7 +74,7 @@ const modes = [
         update: async function (agent) {
             const enemy = world.getNearestEntityWhere(agent.bot, entity => mc.isHostile(entity), 16);
             if (enemy && await world.isClearPath(agent.bot, enemy)) {
-                say(agent, `Aaa! A ${enemy.name}!`);
+                agent.bot.chat(`Aaa! A ${enemy.name}!`);
                 execute(this, agent, async () => {
                     await skills.avoidEnemies(agent.bot, 24);
                 });
@@ -95,7 +90,7 @@ const modes = [
         update: async function (agent) {
             const enemy = world.getNearestEntityWhere(agent.bot, entity => mc.isHostile(entity), 8);
             if (enemy && await world.isClearPath(agent.bot, enemy)) {
-                say(agent, `Fighting ${enemy.name}!`);
+                agent.bot.chat(`Fighting ${enemy.name}!`);
                 execute(this, agent, async () => {
                     await skills.defendSelf(agent.bot, 8);
                 });
@@ -112,7 +107,7 @@ const modes = [
             const huntable = world.getNearestEntityWhere(agent.bot, entity => mc.isHuntable(entity), 8);
             if (huntable && await world.isClearPath(agent.bot, huntable)) {
                 execute(this, agent, async () => {
-                    say(agent, `Hunting ${huntable.name}!`);
+                    agent.bot.chat(`Hunting ${huntable.name}!`);
                     await skills.attackEntity(agent.bot, huntable);
                 });
             }
@@ -135,7 +130,7 @@ const modes = [
                     this.noticed_at = Date.now();
                 }
                 if (Date.now() - this.noticed_at > this.wait * 1000) {
-                    say(agent, `Picking up item!`);
+                    agent.bot.chat(`Picking up ${item.name}!`);
                     this.prev_item = item;
                     execute(this, agent, async () => {
                         await skills.pickupNearbyItems(agent.bot);
@@ -215,8 +210,6 @@ const modes = [
 ];
 
 async function execute(mode, agent, func, timeout=-1) {
-    if (agent.self_prompter.on)
-        agent.self_prompter.stopLoop();
     mode.active = true;
     let code_return = await agent.coder.execute(async () => {
         await func();
@@ -251,17 +244,8 @@ class ModeController {
         this.modes_map[mode_name].paused = true;
     }
 
-    getMiniDocs() { // no descriptions
-        let res = 'Agent Modes:';
-        for (let mode of this.modes_list) {
-            let on = mode.on ? 'ON' : 'OFF';
-            res += `\n- ${mode.name}(${on})`;
-        }
-        return res;
-    }
-
-    getDocs() {
-        let res = 'Agent Modes:';
+    getStr() {
+        let res = 'Available Modes:';
         for (let mode of this.modes_list) {
             let on = mode.on ? 'ON' : 'OFF';
             res += `\n- ${mode.name}(${on}): ${mode.description}`;
